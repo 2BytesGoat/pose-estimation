@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://c4dknogwvy4s7"]
+
+[ext_resource type="PackedScene" uid="uid://dxff6hx5bw2l2" path="res://girl_model.tscn" id="2_q8bhv"]
+[ext_resource type="Script" path="res://udp_client.gd" id="2_uc4vk"]
+
+[node name="Main" type="Node3D"]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.883701, 1.7762)
+current = true
+
+[node name="test_model" parent="." instance=ExtResource( "2_q8bhv" )]
+
+[node name="udp_client" type="Node" parent="."]
+script = ExtResource( "2_uc4vk" )

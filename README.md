@@ -9,3 +9,4 @@
 
 ## Bibliography
 1. https://blog.tensorflow.org/2021/05/next-generation-pose-detection-with-movenet-and-tensorflowjs.html
+2. https://www.andre-gaschler.com/rotationconverter/
