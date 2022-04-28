@@ -5,8 +5,12 @@ from src.webcam import Webcam
 from src.preprocessing import resize_and_pad
 from src.postprocessing import calculate_face_angles
 from src.pose_model import Movenet
+from src.depth_model import Midas
+from src.face_model import BlazeFaceDetector
 from src.networking import GodotUDPClient
 from src.utils import draw_keypoints
+
+import time
 
 def put_text_on_image(image, text):
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -17,20 +21,27 @@ if __name__ == '__main__':
     cam = Webcam()
     cam.start_capture()
 
-    model = Movenet('models\movenet_float16\lite-model_movenet_singlepose_lightning_tflite_float16_4.tflite')
+    model_keypoints = Movenet('models\movenet_float16\lite-model_movenet_singlepose_lightning_tflite_float16_4.tflite')
+    model_face = BlazeFaceDetector(type="back")
+    model_depth = Midas('models\midasv1_tflite\lite-model_midas_v2_1_small_1_lite_1.tflite')
 
     client = GodotUDPClient()
 
     while True:
         frame = cam.grab_frame()
-        frame = resize_and_pad(frame)
-        keypoints = model.predict(frame)[0][0]
-    
-        frame = draw_keypoints(frame, keypoints)
-        angles = calculate_face_angles(keypoints, in_rads=True)
-        client.send_message(angles)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        text = f'{angles}'
+        keypoint_frame = resize_and_pad(frame)
+        keypoints = model_keypoints.predict(keypoint_frame)[0][0]
+        frame = draw_keypoints(keypoint_frame, keypoints)
+
+        results = model_face.detectFaces(keypoint_frame)
+        model_face.drawDetections(frame, results)
+        
+        face_angles = calculate_face_angles(keypoints, results, in_rads=False)
+        # client.send_message(angles)
+
+        text = f'{face_angles}'
         frame = cv2.resize(frame, (480, 480))
 
         frame = put_text_on_image(frame, text)        
