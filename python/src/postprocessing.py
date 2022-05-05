@@ -33,3 +33,17 @@ def calculate_face_angles(keypoints, results, in_rads=True):
     if in_rads:
         return list(map(to_rads, [pitch, yaw, roll]))
     return [pitch, yaw, roll]
+
+def get_angle(keypoints, limb1, limb2, invert=False, shift=0):
+    y_limb1, x_limb1, _ = keypoints[KEYPOINT_MAPPING[limb1]]
+    y_limb2, x_limb2, _ = keypoints[KEYPOINT_MAPPING[limb2]]
+    angle_tan = (y_limb2 - y_limb1) / (x_limb2 - x_limb1)
+    rads = max(-90, min(math.atan(angle_tan), 90))
+    return (rads * -1 if invert else rads) + shift
+
+def calculate_arm_angles(keypoints):
+    right_arm = get_angle(keypoints, 'right_shoulder', 'right_elbow', shift=-1.5, invert=True)
+    left_arm = get_angle(keypoints, 'left_shoulder', 'left_elbow', shift=-1.5)
+    right_hand = get_angle(keypoints, 'right_elbow', 'right_wrist')
+    left_hand = get_angle(keypoints, 'left_elbow', 'left_wrist')
+    return [right_arm, left_arm, right_hand, left_hand]
