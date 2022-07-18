@@ -14,6 +14,9 @@ func _ready():
 			"init_pose": skel.get_bone_pose(id)
 		}
 	set_process(true)
+	neck_t = skel.get_bone_pose(neck_id)
+	left_arm_t = skel.get_bone_pose(left_arm_id)
+	right_arm_t = skel.get_bone_pose(right_arm_id)
 
 func _on_UDPServer_new_message(message):
 	#print(message)

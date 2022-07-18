@@ -10,12 +10,18 @@ class GodotUDPClient:
             "face": {
                     "pitch": angles[0],
                     "yaw": angles[1],
-                    "roll": angles[2]
-                }
+                    "roll": angles[2],
+            },
+            "arm": {
+                "shoulder_left": angles[3],
+                "shoulder_right": angles[4],
+                "arm_left": angles[5],
+                "arm_right": angles[6]
             }
+        }
         message_str = str(message).replace("'", '"')
         self.sock.sendto(message_str.encode('utf-8'), ("127.0.0.1", 4240))
 
 if __name__ == '__main__':
     client = GodotUDPClient()
-    client.send_message([0.75, 0, 0])
+    client.send_message([0.75, 0, 0, 0, 0, 0])
