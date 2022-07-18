@@ -1,19 +1,21 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://UDPServer.gd" type="Script" id=1]
 [ext_resource path="res://User.tscn" type="PackedScene" id=2]
 [ext_resource path="res://User.gd" type="Script" id=3]
+[ext_resource path="res://Main.gd" type="Script" id=4]
 
 [node name="Main" type="Node"]
+script = ExtResource( 4 )
 
 [node name="UDPServer" type="Node" parent="."]
 script = ExtResource( 1 )
 
+[node name="Camera" type="Camera" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 2 )
+current = true
+
 [node name="User" parent="." instance=ExtResource( 2 )]
 script = ExtResource( 3 )
-
-[node name="Camera" type="Camera" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.03309, 1.4265 )
-current = true
 
 [connection signal="new_message" from="UDPServer" to="User" method="_on_UDPServer_new_message"]

@@ -14,7 +14,7 @@ class GodotUDPClient:
                 }
             }
         message_str = str(message).replace("'", '"')
-        self.sock.sendto(message_str.encode('utf-8'), ("127.0.0.1", 4242))
+        self.sock.sendto(message_str.encode('utf-8'), ("127.0.0.1", 4240))
 
 if __name__ == '__main__':
     client = GodotUDPClient()

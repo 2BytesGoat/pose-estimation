@@ -7,7 +7,7 @@ var peers = []
 signal new_message(message)
 
 func _ready():
-	server.listen(4242)
+	server.listen(4240)
 
 func _process(delta):
 	server.poll() # Important!
