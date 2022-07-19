@@ -1,3 +1,6 @@
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+
 import cv2
 import mediapipe as mp
 
@@ -26,7 +29,7 @@ with mp_pose.Pose(
             continue
 
         points = []
-        for lm in results.pose_world_landmarks.landmark:
+        for lm in results.pose_landmarks.landmark:
             points.append([lm.x, lm.y, lm.z])
         
         txt_name = Path(file).parent / (Path(file).stem + '.txt')

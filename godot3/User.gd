@@ -2,7 +2,12 @@ extends Spatial
 
 var skel
 
-var key_points_names = ["RightUpLeg", "RightLeg"]
+var key_points_names = [
+	"LeftUpLeg", "LeftLeg", "LeftFoot",
+	"RightUpLeg", "RightLeg", "RightFoot",
+	"LeftShoulder", "LeftArm", "LeftForeArm",
+	"RightShoulder", "RightArm", "RightForeArm"
+	]
 var key_points = {}
 
 func _ready():
@@ -14,12 +19,8 @@ func _ready():
 			"init_pose": skel.get_bone_pose(id)
 		}
 	set_process(true)
-	neck_t = skel.get_bone_pose(neck_id)
-	left_arm_t = skel.get_bone_pose(left_arm_id)
-	right_arm_t = skel.get_bone_pose(right_arm_id)
 
 func _on_UDPServer_new_message(message):
-	#print(message)
 	var msg_json = JSON.parse(message).result
 	for kp_name in key_points_names:
 		var id = key_points[kp_name]["id"]

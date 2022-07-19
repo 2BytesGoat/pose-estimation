@@ -8,16 +8,6 @@
 
 config_version=4
 
-_global_script_classes=[ {
-"base": "Spatial",
-"class": "BoneHandle",
-"language": "GDScript",
-"path": "res://addons/bone_editor/BoneHandle.gd"
-} ]
-_global_script_class_icons={
-"BoneHandle": ""
-}
-
 [application]
 
 config/name="Pose Estimation"

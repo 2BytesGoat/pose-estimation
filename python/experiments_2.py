@@ -8,7 +8,7 @@ with open(data_path, 'r') as f:
 import mediapipe as mp
 mp_keypoints = mp.solutions.pose.PoseLandmark
 
-from keypoint_rotation import KeypointRotations
+from keypoints.keypoint_rotation import KeypointRotations
 
 offset_directions = {
         'lefthip': mp_keypoints.LEFT_HIP.value,
@@ -28,12 +28,6 @@ offset_directions = {
         'rightwrist': mp_keypoints.RIGHT_WRIST.value
     }
 
-kpts = {
-    key: data[value] for key, value in offset_directions.items()
-}
-
-calculator = KeypointRotations()
-angles = calculator.calculate_joint_angles(kpts)
 # %%
 import socket
 
@@ -49,9 +43,29 @@ class GodotUDPClient:
 client = GodotUDPClient()
 # %%
 godot_mapping = {
-    'RightUpLeg': 'lefthip',
-    'RightLeg': 'leftknee'
+    'LeftUpLeg': 'lefthip',
+    'LeftLeg': 'leftknee',
+    'LeftFoot': 'leftfoot',
+
+    'RightUpLeg': 'righthip',
+    'RightLeg': 'rightknee',
+    'RightFoot': 'rightfoot',
+
+    'LeftShoulder': 'leftshoulder',
+    'LeftArm': 'leftelbow',
+    'LeftForeArm': 'leftwrist',
+
+    'RightShoulder': 'rightshoulder',
+    'RightArm': 'rightelbow',
+    'RightForeArm':'rightwrist',
 }
+
+kpts = {
+    key: data[value] for key, value in offset_directions.items()
+}
+
+calculator = KeypointRotations()
+angles = calculator.calculate_keypoint_angles(kpts)
 
 message = {}
 
@@ -60,7 +74,7 @@ for key, value in godot_mapping.items():
     message[key] = {
         'pitch': pitch,
         'yaw': yaw,
-        'roll': roll
+        'roll': roll,
     }
 
 client.send_message(message)

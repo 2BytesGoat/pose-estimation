@@ -9,6 +9,7 @@ This project aims to bring monocular-pose-estimation to Godot.
 2. https://www.andre-gaschler.com/rotationconverter/
 
 ## ToDos
-* [ ] debug `joint-angles-calculate` refactor to see why we have bad angles
+* [x] debug `joint-angles-calculate` refactor to see why we have bad angles
+* [ ] check what is the diference between `pose_landmarks` and `pose_world_landmarks`
 * [ ] document the calculation of joint angles procedure
 * [ ] make project readme prettier

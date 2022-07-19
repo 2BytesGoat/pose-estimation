@@ -8,9 +8,9 @@ class GodotUDPClient:
     def send_message(self, angles):
         message = {
             "face": {
-                    "pitch": angles[0],
-                    "yaw": angles[1],
-                    "roll": angles[2],
+                "pitch": angles[0],
+                "yaw": angles[1],
+                "roll": angles[2],
             },
             "arm": {
                 "shoulder_left": angles[3],
