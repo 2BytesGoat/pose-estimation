@@ -1,7 +1,6 @@
-'''Code shamelessly copied from TemugeB
+'''Code shamelessly copied from Temuge Batpurev
 link: https://github.com/TemugeB/joint_angles_calculate/blob/main/utils.py
 '''
-
 import numpy as np
 
 def magnitude(v):

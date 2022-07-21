@@ -8,7 +8,7 @@ with open(data_path, 'r') as f:
 import mediapipe as mp
 mp_keypoints = mp.solutions.pose.PoseLandmark
 
-from keypoints.keypoint_rotation import KeypointRotations
+from keypoints import KeypointRotations
 
 offset_directions = {
         'lefthip': mp_keypoints.LEFT_HIP.value,

@@ -1,3 +1,6 @@
+'''Code adapted from Temuge Batpurev
+link: https://github.com/TemugeB/joint_angles_calculate/blob/main/calculate_joint_angles.py
+'''
 import numpy as np
 
 import keypoints.utils as utils
@@ -12,24 +15,11 @@ HIERARCHY = {'hips': [],
 
 OFFSETS = {
     'hips': np.array([0, 0, 0]),
-
-    'lefthip': np.array([1, 0, 0]),
-    'leftknee': np.array([0, -1, 0]),
-    'leftfoot': np.array([0, -1, 0]),
-
-    'righthip': np.array([-1, 0, 0]),
-    'rightknee': np.array([0, -1, 0]),
-    'rightfoot': np.array([0, -1, 0]), 
-
+    'lefthip': np.array([1, 0, 0]), 'leftknee': np.array([0, -1, 0]), 'leftfoot': np.array([0, -1, 0]),
+    'righthip': np.array([-1, 0, 0]), 'rightknee': np.array([0, -1, 0]), 'rightfoot': np.array([0, -1, 0]), 
     'neck': np.array([0, 1, 0]),
-
-    'leftshoulder': np.array([1, 0, 0]),
-    'leftelbow': np.array([1, 0, 0]),
-    'leftwrist': np.array([1, 0, 0]),
-
-    'rightshoulder': np.array([-1,0,0]),
-    'rightelbow': np.array([-1,0,0]),
-    'rightwrist': np.array([-1,0,0])
+    'leftshoulder': np.array([1, 0, 0]), 'leftelbow': np.array([1, 0, 0]), 'leftwrist': np.array([1, 0, 0]),
+    'rightshoulder': np.array([-1,0,0]), 'rightelbow': np.array([-1,0,0]), 'rightwrist': np.array([-1,0,0])
 }
 
 class KeypointRotations:
@@ -148,72 +138,3 @@ class KeypointRotations:
                 kpts_rotations[parent] = joint_rotation
 
         return kpts_rotations
-
-if __name__ == '__main__':
-    def read_keypoints(filename):
-        num_keypoints = 12
-        fin = open(filename, 'r')
-
-        kpts = []
-        while(True):
-            line = fin.readline()
-            if line == '': break
-
-            line = line.split()
-            line = [float(s) for s in line]
-
-            line = np.reshape(line, (num_keypoints, -1))
-            kpts.append(line)
-
-        kpts = np.array(kpts)
-        return kpts
-
-    def convert_to_dictionary(kpts):
-        #its easier to manipulate keypoints by joint name
-        keypoints_to_index = {'lefthip': 6, 'leftknee': 8, 'leftfoot': 10,
-                            'righthip': 7, 'rightknee': 9, 'rightfoot': 11,
-                            'leftshoulder': 0, 'leftelbow': 2, 'leftwrist': 4,
-                            'rightshoulder': 1, 'rightelbow': 3, 'rightwrist': 5}
-
-        kpts_dict = {}
-        for key, k_index in keypoints_to_index.items():
-            kpts_dict[key] = kpts[:,k_index]
-
-        kpts_dict['joints'] = list(keypoints_to_index.keys())
-
-        return kpts_dict
-
-    kpts = read_keypoints('tests/kpts_3d.dat')
-    kpts = convert_to_dictionary(kpts)
-
-    kpts_sample = {
-        key: kpts[key][0] for key in kpts['joints']
-    }
-
-    kpts_sample = {
-        'lefthip': np.array([0.667934  , 8.87940658, 9.96319157]), 
-        'leftknee': np.array([-3.34578655,  8.96091348,  9.73515891]), 
-        'leftfoot': np.array([-5.92501355, 11.27615927,  7.50971397]), 
-        'righthip': np.array([ 0.75793423, 10.31887436, 11.43529256]), 
-        'rightknee': np.array([-3.38370222,  9.46210077, 14.07380719]), 
-        'rightfoot': np.array([-7.25593058, 10.16061439, 13.68205105]), 
-        'leftshoulder': np.array([6.37315284, 8.42415094, 8.77096848]), 
-        'leftelbow': np.array([3.26082629, 8.24708268, 8.22167763]), 
-        'leftwrist': np.array([0.54430702, 6.99003009, 8.91145991]), 
-        'rightshoulder': np.array([ 6.69674782, 10.98142669, 11.50536544]), 
-        'rightelbow': np.array([ 3.55587357, 11.87956765, 12.13774564]), 
-        'rightwrist': np.array([ 0.48589837, 11.52834985, 13.55304308]), 
-        'hips': np.array([ 0.71293411,  9.59914047, 10.69924206]), 
-        'neck': np.array([ 6.53495033,  9.70278881, 10.13816696])
-    }
-
-    calculator = KeypointRotations()
-    angles = calculator.calculate_keypoint_angles(kpts_sample)
-
-    print(angles['hips'])
-
-    with open('tests/test_output_angles.txt', 'r') as f:
-        test_angles = eval(f.read())
-    
-    print(test_angles['hips'])
-    

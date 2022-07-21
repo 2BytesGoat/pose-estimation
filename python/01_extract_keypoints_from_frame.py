@@ -1,4 +1,4 @@
-import ssl
+import ssl # hotfix for a local ssl issue
 ssl._create_default_https_context = ssl._create_unverified_context
 
 import cv2

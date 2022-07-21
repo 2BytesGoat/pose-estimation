@@ -37,8 +37,6 @@ def get_angles(plane):
         return angle
     return get_angle(plane, oX), get_angle(plane, oY), get_angle(plane, oZ)
 
-# https://stackoverflow.com/questions/20699821/find-and-draw-regression-plane-to-a-set-of-points
-
 angles = {
     "face": {
         "pitch": 0,
@@ -101,15 +99,3 @@ with mp_pose.Pose(
     if cv2.waitKey(5) & 0xFF == 27:
       break
 cap.release()
-# with open('points.txt', 'w') as f:
-#     f.write(str(points))
-
-# points = np.array(points)
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(points[:,0], points[:,1], points[:,2])
-# ax.scatter(points[:11,0], points[:11,1], points[:11,2])
-# plt.show()
-
-
-# %%

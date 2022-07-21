@@ -1,5 +1,5 @@
 import numpy as np
-from keypoints.keypoint_rotation import KeypointRotations
+from keypoints import KeypointRotations
 
 kpts_sample = {
     'lefthip': np.array([0.667934  , 8.87940658, 9.96319157]), 
