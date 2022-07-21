@@ -29,10 +29,6 @@ kpts = {
     key: data[value] for key, value in mp_mapping.items()
 }
 # %%
-with open('frame_0.txt', 'r') as f:
-    kpts = eval(f.read())
-kpts = {key: np.array(value) for key, value in kpts.items()}
-# %%
 from keypoints import KeypointRotations
 
 calculator = KeypointRotations()

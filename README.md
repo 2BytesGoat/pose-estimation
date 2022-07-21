@@ -18,7 +18,8 @@ The goal of this project is to move a 3D character from Godot based on user move
 ## ToDos
 * [x] debug `joint-angles-calculate` refactor to see why we have bad outpus
 * [x] add tests for `keypoint-rotations` 
-* [ ] do skeleton reconstruction based on angles
-* [ ] check what is the diference between `pose_landmarks` and `pose_world_landmarks`
+* [x] do skeleton reconstruction based on angles
+* [x] check what is the diference between `pose_landmarks` and `pose_world_landmarks`
+* [ ] see whether angle order coincide with TB's approach 
 * [ ] document the calculation of joint angles procedure
 * [ ] make project readme prettier
