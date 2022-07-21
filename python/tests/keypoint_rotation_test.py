@@ -78,6 +78,25 @@ def test_calculate_root_rotation():
     assert(target_root_rot == output_root_rot).all(), \
         f'Incorrect {root_joint}-keypoint, expected {target_root_rot} but got {output_root_rot}'
 
+def test_get_bone_lengths():
+    target_bone_lengths = {
+        'lefthip': 1.03, 'leftknee': 4.021, 'leftfoot': 4.119, 
+        'righthip': 1.03, 'rightknee': 4.985, 'rightfoot': 3.954, 
+        'leftshoulder': 1.879, 'leftelbow': 3.165, 'leftwrist': 3.072, 
+        'rightshoulder': 1.879, 'rightelbow': 3.327, 'rightwrist': 3.399, 
+        'neck': 5.85
+    }
+
+    kp_obj = KeypointRotations()
+    new_kpts = kp_obj.add_neck_and_hip_keypoints(kpts_sample)
+    output_bone_lengths = kp_obj.get_bone_lengths(new_kpts)
+
+    for joint in target_bone_lengths:
+        target_length = target_bone_lengths[joint]
+        output_length = round(output_bone_lengths[joint], 3)
+        assert target_length == output_length, \
+            f'Expected {joint} length to be {target_length} but got {output_length}'
+
 def test_get_joint_rotations():
     target_lefthip_rot = np.array([0.083, 0.134, -0.006])
 
@@ -104,9 +123,90 @@ def test_get_joint_rotations():
     assert(target_lefthip_rot == output_lefthip_rot).all(), \
         f'Incorrect {parent}-keypoint, expected {target_lefthip_rot} but got {output_lefthip_rot}'
 
-if __name__ == '__main__':
-    test_rotate_pose_up()
-    test_add_neck_and_hip_keypoints()
-    test_center_keypoints()
-    test_calculate_root_rotation()
-    test_get_joint_rotations()
+def test_get_base_skeleton():
+    target_base_skeleton = {
+        'hips': np.array([0, 0, 0]), 
+        'lefthip': np.array([0.17614683, 0., 0.]), 
+        'righthip': np.array([-0.17614683,  0.,  0.]), 
+        'leftknee': np.array([ 0., -0.76974663,  0.]), 
+        'rightknee': np.array([ 0., -0.76974663,  0.]), 
+        'leftfoot': np.array([ 0., -0.69001824,  0.]), 
+        'rightfoot': np.array([ 0., -0.69001824,  0.]), 
+        'leftshoulder': np.array([0.32118727, 0., 0.]), 
+        'rightshoulder': np.array([-0.32118727,  0.,  0.]), 
+        'leftelbow': np.array([0.55494827, 0., 0.]), 
+        'rightelbow': np.array([-0.55494827,  0.,  0.]), 
+        'leftwrist': np.array([0.55303607, 0., 0.]), 
+        'rightwrist': np.array([-0.55303607,  0.,  0.]), 
+        'neck': np.array([0., 1., 0.])}
+
+    kp_obj = KeypointRotations()
+    new_kpts = kp_obj.add_neck_and_hip_keypoints(kpts_sample)
+    new_kpts = kp_obj.center_keypoints(new_kpts, 'hips')
+
+    bone_lengths = kp_obj.get_bone_lengths(new_kpts)
+    normalization = bone_lengths['neck']
+    base_skeleton = kp_obj.get_base_skeleton(bone_lengths, normalization)
+
+    for joint in target_base_skeleton:
+        target_length = np.around(target_base_skeleton[joint], 3)
+        output_length = np.around(base_skeleton[joint], 3)
+        assert (target_length == output_length).all(), \
+            f'Expected {joint} length to be {target_length} but got {output_length}'
+
+def test_get_rotation_chain():
+    target_rotation = np.array(
+        [[ 0.02646302,  0.99818489, -0.05409836],
+         [-0.6982472,  -0.02027021, -0.71556968],
+         [-0.71536743,  0.05671017,  0.6964434 ]]
+    )
+
+    kp_obj = KeypointRotations()
+
+    hierarchy = ['lefthip', 'hips']
+    kpts_rotations = {
+        'hips': np.array([-1.55299538, -0.09598362,  0.79955135]),
+        'lefthip': np.array([ 0.08336282,  0.13366153, -0.00558273]),
+        'leftknee': np.array([-0.0337819 ,  0.83998899,  0.01508699]),
+    }
+
+    output_rotation = kp_obj.get_rotation_chain(hierarchy, kpts_rotations)
+    
+    target_rotation = np.around(target_rotation, 3)
+    output_rotation = np.around(output_rotation, 3)
+
+    print('Output rotation: ', output_rotation)
+
+    assert (target_rotation == output_rotation).all(), \
+        f'Bad rotation chain calculation'
+
+def reconstruct_joint_kpts_from_angles():
+    target_leftknee_kpts = {
+        'kpt1': np.array([0.11195379, 1.51792921, 1.70323553]), 
+        'kpt2': np.array([-0.65639566,  1.53353214,  1.65958308])
+    }
+
+    kp_obj = KeypointRotations()
+    new_kpts = kp_obj.add_neck_and_hip_keypoints(kpts_sample)
+
+    kpts_rotations = {
+        'hips': np.array([-1.55299538, -0.09598362,  0.79955135]),
+        'lefthip': np.array([ 0.08336282,  0.13366153, -0.00558273]),
+        'leftknee': np.array([-0.0337819 ,  0.83998899,  0.01508699]),
+    }
+
+    joint = 'leftknee'
+
+    bone_lengths = kp_obj.get_bone_lengths(new_kpts)
+    normalization = bone_lengths['neck']
+    base_skeleton = kp_obj.get_base_skeleton(bone_lengths, normalization)
+
+    output_kpt1, output_kpt2 = kp_obj.reconstruct_joint_kpts_from_angles(
+        joint, kpts_rotations, base_skeleton, new_kpts['hips'], normalization
+    )
+
+    for target_kpt, output_kpt in zip(target_leftknee_kpts.values(), [output_kpt1, output_kpt2]):
+        target_kpt = np.around(target_kpt, 3)
+        output_kpt = np.around(output_kpt, 3)
+        assert (target_kpt == output_kpt).all(), \
+            f'Expected keypoint to be {target_kpt} but got {output_kpt}'

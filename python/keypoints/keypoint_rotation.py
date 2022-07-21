@@ -1,6 +1,7 @@
 '''Code adapted from Temuge Batpurev
 link: https://github.com/TemugeB/joint_angles_calculate/blob/main/calculate_joint_angles.py
 '''
+import copy
 import numpy as np
 
 import keypoints.utils as utils
@@ -30,7 +31,7 @@ class KeypointRotations:
 
     @staticmethod
     def rotate_pose(kpts:dict, axis:str, degrees:int=90)->dict:
-        kpts_cpy = kpts.copy()
+        kpts_cpy = copy.deepcopy(kpts)
         angle = np.deg2rad(degrees)
         if axis == 'x':
             R = utils.get_R_x(angle)
@@ -53,7 +54,7 @@ class KeypointRotations:
             keypoint_mid = keypoint_right + half_distance
             return keypoint_mid
 
-        kpts_cpy = kpts.copy()
+        kpts_cpy = copy.deepcopy(kpts)
         kpts_cpy['neck'] = calculate_midpoint(
             kpts['leftshoulder'], 
             kpts['rightshoulder']
@@ -79,13 +80,32 @@ class KeypointRotations:
 
     @staticmethod
     def center_keypoints(kpts, root_pnt_name):
-        kpts_cpy = kpts.copy()
+        kpts_cpy = copy.deepcopy(kpts)
         root_pnt = kpts_cpy[root_pnt_name]
         for joint in kpts_cpy.keys():
             kpts_cpy[joint] -= root_pnt
         return kpts_cpy
 
-    def _init_bone_lengths(self, kpts):
+    def _init_kpts_rotations(self, kpts):
+        kpts_rotations = {joint: np.array([0.,0.,0.]) for joint in kpts.keys()}
+        return kpts_rotations
+
+    def reconstruct_joint_kpts_from_angles(self, joint, angles, base_skeleton, root_pnt, normalization):
+        # joint, kpts_rotations, base_skeleton, new_kpts['hips'], normalization
+        
+        joint_hierarchy = self.kpts_hierarchy[joint]
+        #get the current position of the parent joint
+        r1 = root_pnt / normalization
+        for parent in joint_hierarchy:
+            if parent == 'hips': continue
+            R = self.get_rotation_chain(self.kpts_hierarchy[parent], angles)
+            r1 = r1 + R @ base_skeleton[parent]
+        #get the current position of the joint. Note: r2 is the final position of the joint. r1 is simply calculated for plotting.
+        r2 = r1 + self.get_rotation_chain(joint_hierarchy, angles) @ base_skeleton[joint]
+
+        return r1, r2
+
+    def get_bone_lengths(self, kpts):
         bone_lengths = {}
         for joint in kpts:
             if joint == 'hips': continue
@@ -98,19 +118,34 @@ class KeypointRotations:
             bone_lengths[joint] = _bone_length
         return bone_lengths
 
-    def _init_kpts_rotations(self, kpts):
-        kpts_rotations = {joint: np.array([0.,0.,0.]) for joint in kpts.keys()}
-        return kpts_rotations
+    def get_base_skeleton(self, body_lengths, normalization):
+        def _set_length(joint_type):
+            base_skeleton['left' + joint_type] = self.kpts_offsets['left' + joint_type] * ((body_lengths['left' + joint_type] + body_lengths['right' + joint_type])/(2 * normalization))
+            base_skeleton['right' + joint_type] = self.kpts_offsets['right' + joint_type] * ((body_lengths['left' + joint_type] + body_lengths['right' + joint_type])/(2 * normalization))
+        base_skeleton = {'hips': np.array([0,0,0])}
+        base_skeleton['neck'] = self.kpts_offsets['neck'] * (body_lengths['neck']/normalization)
+        _set_length('hip')
+        _set_length('knee')
+        _set_length('foot')
+        _set_length('shoulder')
+        _set_length('elbow')
+        _set_length('wrist')
+        return base_skeleton
+
+    #helper function that composes a chain of rotation matrices
+    def get_rotation_chain(self, hierarchy, frame_rotations, inverse=False):
+        if not inverse:
+            hierarchy = hierarchy[::-1]
+        #this code assumes ZXY rotation order
+        R = np.eye(3)
+        for parent in hierarchy:
+            angles = frame_rotations[parent]
+            _R = utils.get_R_z(angles[0])@utils.get_R_x(angles[1])@utils.get_R_y(angles[2])
+            R = R @ _R.T if inverse else R @ _R
+        return R
 
     def get_joint_rotations(self, joint_pos, joint_offset, parent_pos, connected_joints, kpts_rotations):
-        _invR = np.eye(3)
-    
-        # first joint corresponds to parent joint, the rest are grandparents
-        for grampa_name in connected_joints[1:]:
-            _r_angles = kpts_rotations[grampa_name]
-            R = utils.get_R_z(_r_angles[0]) @ utils.get_R_x(_r_angles[1]) @ utils.get_R_y(_r_angles[2])
-            _invR = _invR @ R.T
-
+        _invR = self.get_rotation_chain(connected_joints[1:], kpts_rotations, True)
         b = _invR @ (joint_pos - parent_pos)
 
         _R = utils.Get_R2(joint_offset, b)
