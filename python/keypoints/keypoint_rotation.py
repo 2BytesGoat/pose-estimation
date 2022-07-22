@@ -6,7 +6,8 @@ import numpy as np
 
 import keypoints.utils as utils
 
-HIERARCHY = {'hips': [],
+HIERARCHY = {
+    'hips': [],
     'lefthip': ['hips'], 'leftknee': ['lefthip', 'hips'], 'leftfoot': ['leftknee', 'lefthip', 'hips'],
     'righthip': ['hips'], 'rightknee': ['righthip', 'hips'], 'rightfoot': ['rightknee', 'righthip', 'hips'],
     'neck': ['hips'],
@@ -139,8 +140,8 @@ class KeypointRotations:
         #this code assumes ZXY rotation order
         R = np.eye(3)
         for parent in hierarchy:
-            angles = frame_rotations[parent]
-            _R = utils.get_R_z(angles[0])@utils.get_R_x(angles[1])@utils.get_R_y(angles[2])
+            _r_angles = frame_rotations[parent]
+            _R = utils.get_R_z(_r_angles[0])@utils.get_R_x(_r_angles[1])@utils.get_R_y(_r_angles[2])
             R = R @ _R.T if inverse else R @ _R
         return R
 
@@ -150,7 +151,7 @@ class KeypointRotations:
 
         _R = utils.Get_R2(joint_offset, b)
         tz, ty, tx = utils.Decompose_R_ZXY(_R)
-        joint_rs = np.array([tz, tx, ty])
+        joint_rs = np.array([tz, ty, tx])
 
         return joint_rs
 
@@ -164,12 +165,12 @@ class KeypointRotations:
         )
         
         # cannot calculate angle if we don't have at least two connections
-        for depth in range(2, self.max_connected_joints):    
+        for depth in range(2, self.max_connected_joints+1):    
             for joint, connected_joints in self.kpts_hierarchy.items():
                 if len(connected_joints) != depth: 
                     continue
                 parent = connected_joints[0]
-                joint_rotation = self.get_joint_rotations(kpts[joint], self.kpts_offsets[joint], kpts[parent], connected_joints, kpts_rotations)
-                kpts_rotations[parent] = joint_rotation
+                z, y, x = self.get_joint_rotations(kpts[joint], self.kpts_offsets[joint], kpts[parent], connected_joints, kpts_rotations)
+                kpts_rotations[parent] = np.array([z, x, y])
 
         return kpts_rotations

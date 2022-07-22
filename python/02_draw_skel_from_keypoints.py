@@ -33,6 +33,8 @@ from keypoints import KeypointRotations
 
 calculator = KeypointRotations()
 new_kpts = calculator.add_neck_and_hip_keypoints(kpts)
+new_kpts = calculator.rotate_pose(new_kpts, 'y')
+
 new_kpts = calculator.center_keypoints(new_kpts, 'hips')
 angles = calculator.calculate_keypoint_angles(new_kpts)
 # %%
@@ -51,5 +53,10 @@ for joint in new_kpts:
     )
     plt.plot(xs = [r1[0], r2[0]], ys = [r1[1], r2[1]], zs = [r1[2], r2[2]], color = 'red')
 
+ax.azim = -90
+ax.elev = -85
+ax.set_xlabel('z')
+ax.set_ylabel('y')
+ax.set_zlabel('x')
 plt.show()
 # %%

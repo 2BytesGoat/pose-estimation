@@ -51,13 +51,11 @@ godot_mapping = {
     'RightLeg': 'rightknee',
     'RightFoot': 'rightfoot',
 
-    'LeftShoulder': 'leftshoulder',
-    'LeftArm': 'leftelbow',
-    'LeftForeArm': 'leftwrist',
+    'LeftArm': 'leftshoulder',
+    'LeftForeArm': 'leftelbow',
 
-    'RightShoulder': 'rightshoulder',
-    'RightArm': 'rightelbow',
-    'RightForeArm':'rightwrist',
+    'RightArm': 'rightshoulder',
+    'RightForeArm': 'rightelbow',
 }
 
 kpts = {
@@ -65,15 +63,25 @@ kpts = {
 }
 
 calculator = KeypointRotations()
-angles = calculator.calculate_keypoint_angles(kpts)
+new_kpts = calculator.add_neck_and_hip_keypoints(kpts)
+new_kpts = calculator.rotate_pose(new_kpts, 'z')
+
+new_kpts = calculator.center_keypoints(new_kpts, 'hips')
+angles = calculator.calculate_keypoint_angles(new_kpts)
+
+# angles['leftshoulder'] += np.array((0, 0, -np.pi/2))
+# angles['leftelbow'] += np.array((0, 0, -np.pi/2))
+
+# angles['rightshoulder'] += np.array((0, 0, np.pi/2))
+# angles['rightelbow'] += np.array((0, 0, np.pi/2))
 
 message = {}
 
 for key, value in godot_mapping.items():
-    pitch, yaw, roll = angles[value]
+    yaw, pitch, roll = angles[value]
     message[key] = {
-        'pitch': pitch,
-        'yaw': yaw,
+        'pitch': yaw,
+        'yaw': pitch,
         'roll': roll,
     }
 

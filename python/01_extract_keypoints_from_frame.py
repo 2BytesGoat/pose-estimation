@@ -29,8 +29,9 @@ with mp_pose.Pose(
             continue
 
         points = []
+        h, w, _ = image.shape
         for lm in results.pose_landmarks.landmark:
-            points.append([lm.x, lm.y, lm.z])
+            points.append([lm.z, lm.y * h, lm.x * w])
         
         txt_name = Path(file).parent / (Path(file).stem + '.txt')
         with open(txt_name, 'w') as f:

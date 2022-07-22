@@ -97,31 +97,104 @@ def test_get_bone_lengths():
         assert target_length == output_length, \
             f'Expected {joint} length to be {target_length} but got {output_length}'
 
-def test_get_joint_rotations():
-    target_lefthip_rot = np.array([0.083, 0.134, -0.006])
+def test_get_rotation_chain():
+    target_rotation = np.array(
+        [[ 0.02646302,  0.99818489, -0.05409836],
+         [-0.6982472,  -0.02027021, -0.71556968],
+         [-0.71536743,  0.05671017,  0.6964434 ]]
+    )
+    kp_obj = KeypointRotations()
+
+    hierarchy = ['lefthip', 'hips']
+    kpts_rotations = {
+        'hips': np.array([-1.55299538, -0.09598362,  0.79955135]),
+        'lefthip': np.array([ 0.08336282,  0.13366153, -0.00558273]),
+        'leftknee': np.array([-0.0337819 ,  0.83998899,  0.01508699]),
+    }
+
+    output_rotation = kp_obj.get_rotation_chain(hierarchy, kpts_rotations)
+    
+    target_rotation = np.around(target_rotation, 3)
+    output_rotation = np.around(output_rotation, 3)
+
+    print('Output rotation: ', output_rotation)
+
+    assert (target_rotation == output_rotation).all(), \
+        f'Expected lefthip rotation to be {target_rotation} but got {output_rotation}'
+
+def test_get_rotation_chain_inverse():
+    target_rotations = {
+        'lefthip': np.array([[-0.056, -0.698, -0.714],[ 0.995,  0.018, -0.096],[ 0.08 , -0.716,  0.693]]), 
+        'righthip': np.array([[-0.056, -0.698, -0.714],[ 0.995,  0.018, -0.096],[ 0.08 , -0.716,  0.693]]), 
+        'neck': np.array([[-0.056, -0.698, -0.714],[ 0.995,  0.018, -0.096],[ 0.08 , -0.716,  0.693]]), 
+        'leftknee': np.array([[ 0.026, -0.698, -0.715],[ 0.998, -0.021 ,  0.057],[-0.054, -0.716,  0.696]]), 
+        'rightknee': np.array([[-0.261, -0.719, -0.644],[ 0.831,  0.172, -0.529],[ 0.491, -0.673,  0.553]]), 
+        'leftshoulder': np.array([[-0.086, -0.68, -0.728],[ 0.993, -0.002, -0.116],[ 0.077, -0.733,  0.676]]), 
+        'rightshoulder': np.array([[-0.086, -0.68, -0.728],[ 0.993, -0.002, -0.116],[ 0.077, -0.733,  0.676]]), 
+        'leftelbow': np.array([[-0.983, -0.056, -0.173],[ 0.174, -0.565, -0.806],[-0.053, -0.823,  0.565]]), 
+        'rightelbow': np.array([[ 0.944, -0.27 , -0.19 ],[ 0.33,  0.733,  0.594],[-0.021, -0.624,  0.781]])
+    }
+
+    kpts_angles = {
+        'hips': np.array([-1.553, -0.096,  0.8  ]), 
+        'lefthip': np.array([ 0.083,  0.134, -0.006]), 
+        'righthip': np.array([-0.235, -0.438, -0.053]), 
+        'neck': np.array([-0.028, -0.   ,  0.025]), 
+        'leftknee': np.array([-0.034,  0.84 ,  0.015]), 
+        'rightknee': np.array([ 0.258,  0.714, -0.097]), 
+        'leftshoulder': np.array([-1.298, -0.117,  0.154]), 
+        'rightshoulder': np.array([ 1.309, -0.111, -0.144]), 
+        'leftelbow': np.array([-0.104,  0.029, -0.536]), 
+        'rightelbow': np.array([0.126, 0.027, 0.421])
+    }
 
     kp_obj = KeypointRotations()
     new_kpts = kp_obj.add_neck_and_hip_keypoints(kpts_sample)
     new_kpts = kp_obj.center_keypoints(new_kpts, 'hips')
 
-    kpts_rotations = {'hips': np.array([0., 0. ,0.])}
-    kpts_rotations['hips'] = kp_obj._calculate_root_rotation(
-        new_kpts['hips'], new_kpts['lefthip'], new_kpts['neck'])
+    output_rotations = {}
+    for depth in range(2, kp_obj.max_connected_joints+1):    
+        for joint, connected_joints in kp_obj.kpts_hierarchy.items():
+            if len(connected_joints) != depth: 
+                continue
+            parent = connected_joints[0]
+            R = kp_obj.get_rotation_chain(connected_joints[1:], kpts_angles, inverse=True)
+            output_rotations[parent] = np.around(R, 3)
+    
+    for joint in target_rotations:
+        target_angle = target_rotations[joint]
+        output_angle = output_rotations[joint]
+        print('-'*5 + joint + '-'*5)
+        print('target:', target_angle)
+        print('output:', output_angle)
+        assert (target_angle == output_angle).all(), \
+            f'Expected {joint} rotation to be {target_angle} but got {output_angle}'
 
-    joint = 'leftknee'
-    connected_joints = kp_obj.kpts_hierarchy[joint]
-    parent = connected_joints[0]
+def test_calculate_keypoint_angles():
+    target_angles = {
+        'hips': np.array([-1.553, -0.096,  0.8  ]), 
+        'lefthip': np.array([ 0.083,  0.134, -0.006]), 
+        'righthip': np.array([-0.235, -0.438, -0.053]), 
+        'neck': np.array([-0.028, -0.   ,  0.025]), 
+        'leftknee': np.array([-0.034,  0.84 ,  0.015]), 
+        'rightknee': np.array([ 0.258,  0.714, -0.097]), 
+        'leftshoulder': np.array([-1.298, -0.117,  0.154]), 
+        'rightshoulder': np.array([ 1.309, -0.111, -0.144]), 
+        'leftelbow': np.array([-0.104,  0.029, -0.536]), 
+        'rightelbow': np.array([0.126, 0.027, 0.421])
+    }
 
-    output_lefthip_rot = kp_obj.get_joint_rotations(
-        new_kpts[joint], 
-        kp_obj.kpts_offsets[joint], 
-        new_kpts[parent], 
-        kp_obj.kpts_hierarchy[joint], 
-        kpts_rotations)
-    output_lefthip_rot = np.around(output_lefthip_rot, 3)
+    kp_obj = KeypointRotations()
+    new_kpts = kp_obj.add_neck_and_hip_keypoints(kpts_sample)
+    new_kpts = kp_obj.center_keypoints(new_kpts, 'hips')
 
-    assert(target_lefthip_rot == output_lefthip_rot).all(), \
-        f'Incorrect {parent}-keypoint, expected {target_lefthip_rot} but got {output_lefthip_rot}'
+    output_angles = kp_obj.calculate_keypoint_angles(new_kpts)
+    
+    for joint in target_angles:
+        target_angle = target_angles[joint]
+        output_angle = np.around(output_angles[joint], 3)
+        assert (target_angle == output_angle).all(), \
+            f'Expected {joint} angle to be {target_angle} but got {output_angle}'
 
 def test_get_base_skeleton():
     target_base_skeleton = {
@@ -154,33 +227,7 @@ def test_get_base_skeleton():
         assert (target_length == output_length).all(), \
             f'Expected {joint} length to be {target_length} but got {output_length}'
 
-def test_get_rotation_chain():
-    target_rotation = np.array(
-        [[ 0.02646302,  0.99818489, -0.05409836],
-         [-0.6982472,  -0.02027021, -0.71556968],
-         [-0.71536743,  0.05671017,  0.6964434 ]]
-    )
-
-    kp_obj = KeypointRotations()
-
-    hierarchy = ['lefthip', 'hips']
-    kpts_rotations = {
-        'hips': np.array([-1.55299538, -0.09598362,  0.79955135]),
-        'lefthip': np.array([ 0.08336282,  0.13366153, -0.00558273]),
-        'leftknee': np.array([-0.0337819 ,  0.83998899,  0.01508699]),
-    }
-
-    output_rotation = kp_obj.get_rotation_chain(hierarchy, kpts_rotations)
-    
-    target_rotation = np.around(target_rotation, 3)
-    output_rotation = np.around(output_rotation, 3)
-
-    print('Output rotation: ', output_rotation)
-
-    assert (target_rotation == output_rotation).all(), \
-        f'Bad rotation chain calculation'
-
-def reconstruct_joint_kpts_from_angles():
+def test_reconstruct_joint_kpts_from_angles():
     target_leftknee_kpts = {
         'kpt1': np.array([0.11195379, 1.51792921, 1.70323553]), 
         'kpt2': np.array([-0.65639566,  1.53353214,  1.65958308])
